@@ -1,0 +1,47 @@
+from setuptools import setup
+import setuptools.extension
+from Cython.Build import cythonize
+import numpy
+import os
+
+ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+with open("README.md", "r", encoding="utf-8") as fh:
+   long_description = fh.read()
+
+kernels = setuptools.extension.Extension(
+    "tsvdd.kernels",
+    sources=["tsvdd/kernels.pyx", "src/ga/logGAK.c", "src/ga/matrixLogGAK.c"],
+    include_dirs=[numpy.get_include(), 'src/ga/'],
+    extra_compile_args=['-fopenmp', '-O3'],
+    extra_link_args=['-fopenmp'])
+
+libsvdd = setuptools.extension.Extension(
+    'tsvdd.libsvdd',
+    sources=["tsvdd/libsvdd.pyx", "src/libsvm/svm.cpp"],
+    include_dirs=[numpy.get_include(), 'src/libsvm/'],
+    extra_compile_args=['-fopenmp', '-O3', '-std=c++11'],
+    extra_link_args=['-fopenmp',  '-lstdc++'])
+
+setup(
+    name='tsvdd',
+    packages=['tsvdd'],
+    version='0.0.1',
+    author="Anon",
+    author_email="anon@gmail.com",
+    url="https://github.com/anon-repository/tsvdd",
+    license='Apache 2.0',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: Apache 2.0",
+        "Operating System :: OS Independent",],
+    description= 'SVDD for time series data based on libsvm.',
+    extras_require={
+        'dev': [
+            'pytest',
+            'pytest-pep8',
+            'pytest-cov']},
+    include_package_data=True,
+    python_requires=">=3.6",
+    ext_modules=cythonize([kernels, libsvdd]))
